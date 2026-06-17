@@ -31,4 +31,7 @@ public class Airline {
 
     @OneToMany(mappedBy = "airline")
     private List<Plane> planes;
+
+    @OneToMany(mappedBy = "airline")
+    private List<Flight> flights;
 }

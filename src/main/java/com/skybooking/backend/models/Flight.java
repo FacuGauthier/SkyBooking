@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -48,4 +49,7 @@ public class Flight {
     @ManyToOne
     @JoinColumn(name = "airline_id")
     private Airline airline;
+
+    @OneToMany(mappedBy = "flight")
+    private List<Passage> passages;
 }
