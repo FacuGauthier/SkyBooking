@@ -21,6 +21,7 @@ public class Luggage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Enumerated(EnumType.STRING)
     private LuggageType type;
 
     private Double weightKg;

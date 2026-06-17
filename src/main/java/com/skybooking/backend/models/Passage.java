@@ -26,6 +26,7 @@ public class Passage {
 
     private String seatNumber;
 
+    @Enumerated(EnumType.STRING)
     private TravelClass travelClass;
 
     @Column(nullable = false, precision = 19, scale = 2)

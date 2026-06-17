@@ -30,5 +30,6 @@ public class Client {
     @Column(unique = true)
     private String phone;
 
+    @Enumerated(EnumType.STRING)
     private Role role;
 }

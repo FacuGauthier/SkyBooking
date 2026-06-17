@@ -35,6 +35,7 @@ public class Flight {
     private LocalDateTime departureTime;
     private LocalDateTime arrivalTime;
 
+    @Enumerated(EnumType.STRING)
     private FlightStatus status;
 
     @Column(nullable = false, precision = 19, scale = 2)
