@@ -22,6 +22,7 @@ public class Passage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String ticketNumber;
 
     private String seatNumber;

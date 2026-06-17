@@ -22,7 +22,10 @@ public class Airline {
 
     private String name;
 
+    @Column(unique = true, nullable = false, length = 2)
     private String iataCode;
+
+    @Column(unique = true, nullable = false, length = 3)
     private String icaoCode;
 
     private String country;
