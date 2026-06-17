@@ -29,6 +29,6 @@ public class Airline {
 
     private String website;
 
-    @OneToMany(mappedBy = "airlines")
+    @OneToMany(mappedBy = "airline")
     private List<Plane> planes;
 }

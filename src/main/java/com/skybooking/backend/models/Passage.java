@@ -43,6 +43,6 @@ public class Passage {
     @JoinColumn(name = "booking_id")
     private Booking booking;
 
-    @OneToMany(mappedBy = "passages")
+    @OneToMany(mappedBy = "passage")
     private List<Luggage> luggage;
 }

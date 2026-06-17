@@ -32,6 +32,6 @@ public class Booking {
     @JoinColumn(name = "client_id")
     private Client client;
 
-    @OneToMany(mappedBy = "bookings")
+    @OneToMany(mappedBy = "booking")
     private List<Passage> passages;
 }
