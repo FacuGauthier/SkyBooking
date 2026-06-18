@@ -1,5 +1,6 @@
 package com.skybooking.backend.models;
 
+import com.skybooking.backend.models.enums.MilesTransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
