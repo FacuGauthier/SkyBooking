@@ -22,6 +22,7 @@ public class Luggage {
     private Integer id;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private LuggageType type;
 
     private Double weightKg;
@@ -35,6 +36,6 @@ public class Luggage {
     private BigDecimal additionalCost;
 
     @ManyToOne
-    @JoinColumn(name = "passage_id")
+    @JoinColumn(name = "passage_id", nullable = false)
     private Passage passage;
 }
