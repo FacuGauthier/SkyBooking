@@ -22,21 +22,6 @@ public class Passage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    private String ticketNumber;
-
-    private String seatNumber;
-
-    @Enumerated(EnumType.STRING)
-    private TravelClass travelClass;
-
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal price;
-
-    @ManyToOne
-    @JoinColumn(name = "passenger_id")
-    private Passenger passenger;
-
     @ManyToOne
     @JoinColumn(name = "flight_id")
     private Flight flight;
@@ -45,6 +30,19 @@ public class Passage {
     @JoinColumn(name = "booking_id")
     private Booking booking;
 
+    @ManyToOne
+    @JoinColumn(name = "passenger_id")
+    private Passenger passenger;
+
+    @Column(length = 4)
+    private String seatNumber;
+
+    @Enumerated(EnumType.STRING)
+    private TravelClass travelClass;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal price;
+
     @OneToMany(mappedBy = "passage")
-    private List<Luggage> luggage;
+    private List<Luggage> luggageList;
 }
