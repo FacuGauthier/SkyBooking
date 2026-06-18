@@ -23,6 +23,7 @@ public class Flight {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String flightNumber;
 
     @ManyToOne
@@ -33,10 +34,14 @@ public class Flight {
     @JoinColumn(name = "destination_airport_id")
     private Airport destinationAirport;
 
+    @Column(nullable = false)
     private LocalDateTime departureTime;
+
+    @Column(nullable = false)
     private LocalDateTime arrivalTime;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private FlightStatus status;
 
     @Column(nullable = false, precision = 19, scale = 2)
@@ -46,10 +51,11 @@ public class Flight {
     @JoinColumn(name = "plane_id")
     private Plane plane;
 
-    @ManyToOne
-    @JoinColumn(name = "airline_id")
-    private Airline airline;
-
     @OneToMany(mappedBy = "flight")
     private List<Passage> passages;
+
+
+    public Airline getAirline() {
+        return plane != null ? plane.getAirline() : null;
+    }
 }
