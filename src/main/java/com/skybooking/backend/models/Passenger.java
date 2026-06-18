@@ -24,8 +24,12 @@ public class Passenger {
     private String firstName;
     private String lastName;
 
-    @Column(unique = true)
-    private String DNI;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "document_type", nullable = false)
+    private DocumentType documentType;
+
+    @Column(name = "document_number", nullable = false)
+    private String documentNumber;
 
     private String nationality;
 
