@@ -21,10 +21,10 @@ public class Airport {
 
     private String name;
 
-    @Column(unique = true, nullable = false, length = 2)
+    @Column(unique = true, nullable = false, length = 3)
     private String iataCode;
 
-    @Column(unique = true, nullable = false, length = 3)
+    @Column(unique = true, nullable = false, length = 4)
     private String icaoCode;
 
     private String city;
