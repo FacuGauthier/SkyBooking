@@ -34,6 +34,7 @@ public class Passenger {
 
     private String nationality;
 
+    @Column(nullable = false)
     private LocalDate birthDate;
 
     private String gender;
