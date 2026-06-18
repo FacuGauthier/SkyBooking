@@ -22,8 +22,6 @@ public class Plane {
 
     private String model;
 
-    private Integer capacity;
-
     private Integer businessSeats;
     private Integer economySeats;
 
@@ -32,4 +30,11 @@ public class Plane {
     @ManyToOne
     @JoinColumn(name = "airline_id")
     private Airline airline;
+
+
+    public int getTotalCapacity() {
+        int business = businessSeats != null ? businessSeats : 0;
+        int economy  = economySeats  != null ? economySeats  : 0;
+        return business + economy;
+    }
 }
