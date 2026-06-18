@@ -39,6 +39,12 @@ public class Passenger {
 
     private String gender;
 
+    @Column(unique = true)
+    private String frequentFlyerNumber;
+
+    @Column(nullable = false)
+    private Integer milesBalance = 0;
+
     @OneToMany(mappedBy = "passenger")
     private List<Passage> passages;
 }
