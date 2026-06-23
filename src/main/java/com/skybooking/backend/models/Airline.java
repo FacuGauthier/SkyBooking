@@ -32,6 +32,8 @@ public class Airline {
 
     private String website;
 
+    private String logoUrl;
+
     @OneToMany(mappedBy = "airline")
     private List<Plane> planes;
 
