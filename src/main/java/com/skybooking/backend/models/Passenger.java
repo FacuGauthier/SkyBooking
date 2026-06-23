@@ -25,6 +25,10 @@ public class Passenger {
     private String firstName;
     private String lastName;
 
+    @ManyToOne
+    @JoinColumn(name = "client_id")
+    private Client client;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "document_type", nullable = false)
     private DocumentType documentType;
