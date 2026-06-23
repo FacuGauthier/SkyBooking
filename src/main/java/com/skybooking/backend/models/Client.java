@@ -37,4 +37,8 @@ public class Client {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    private boolean active = true;
+
+    private String avatar;
 }
