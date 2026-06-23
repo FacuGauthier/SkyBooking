@@ -51,6 +51,9 @@ public class Flight {
     @JoinColumn(name = "plane_id")
     private Plane plane;
 
+    @Column(nullable = false)
+    private Integer stops = 0;
+
     @OneToMany(mappedBy = "flight")
     private List<Passage> passages;
 
