@@ -42,4 +42,11 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking")
     private List<Passage> passages;
+
+
+
+    @PrePersist
+    public void prePersist() {
+        if (bookingDate == null) bookingDate = LocalDateTime.now();
+    }
 }
