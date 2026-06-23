@@ -37,4 +37,12 @@ public class Plane {
         int economy  = economySeats  != null ? economySeats  : 0;
         return business + economy;
     }
+
+    public int getBusinessCapacity() {
+        return businessSeats != null ? businessSeats : 0;
+    }
+
+    public int getEconomyCapacity() {
+        return economySeats != null ? economySeats : 0;
+    }
 }
