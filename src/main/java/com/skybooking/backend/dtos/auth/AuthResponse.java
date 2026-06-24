@@ -11,7 +11,7 @@ public record AuthResponse(
         String phone,
         Role role,
         String avatar,
-        String milesBalance,
+        Integer milesBalance,
         String frequencyFlyerNumber
 ) {
 }
