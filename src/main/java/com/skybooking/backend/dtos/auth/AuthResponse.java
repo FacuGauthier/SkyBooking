@@ -1,5 +1,7 @@
 package com.skybooking.backend.dtos.auth;
 
+import com.skybooking.backend.models.enums.Role;
+
 public record AuthResponse(
         String token,
         String id,
@@ -7,7 +9,7 @@ public record AuthResponse(
         String lastName,
         String email,
         String phone,
-        String role,
+        Role role,
         String avatar,
         String milesBalance,
         String frequencyFlyerNumber
