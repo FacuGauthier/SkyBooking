@@ -10,7 +10,7 @@ public record LuggageResponse(
         Double widthCm,
         Double lengthCm,
         String description,
-        Double additionalCosts,
+        Double additionalCost,
         Long passengerId
 ) {
 }
