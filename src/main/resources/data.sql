@@ -1,0 +1,2 @@
+-- Initial seed data for SkyBooking.
+-- Add INSERT statements here when the application needs bootstrap data.
