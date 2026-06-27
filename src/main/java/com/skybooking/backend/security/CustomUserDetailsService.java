@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import org.jspecify.annotations.NonNull;
+
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -16,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final ClientRepository clientRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    public @NonNull UserDetails loadUserByUsername(@NonNull String email) throws UsernameNotFoundException {
         Client client = clientRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
