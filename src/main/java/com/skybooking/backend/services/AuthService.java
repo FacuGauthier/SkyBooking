@@ -36,30 +36,12 @@ public class AuthService {
         }
 
         // 2. Crear el Client
-        Client c = new Client();
-        c.setFirstName(dto.firstName());
-        c.setLastName(dto.lastName());
-        c.setEmail(dto.email());
-        c.setPhone(dto.phone());
-        c.setPasswordHash(passwordEncoder.encode(dto.password()));
-        c.setRole(Role.CLIENT);
-        c.setActive(true);
+        Client c = buildClient(dto);
 
         Client clientSaved = clientRepository.save(c);
 
         // 3. Crear el Passenger principal vinculado al Client
-        Passenger p = new Passenger();
-        p.setFirstName(dto.firstName());
-        p.setLastName(dto.lastName());
-        p.setClient(clientSaved);
-        p.setMilesBalance(0);
-
-        // Generar frequentFlyerNumber único ("SK-" + UUID corto)
-        String shortUUID = UUID.randomUUID().toString().replace("-","").substring(0,7).toUpperCase();
-        p.setFrequentFlyerNumber(shortUUID);
-        p.setDocumentType(dto.documentType());
-        p.setDocumentNumber(dto.documentNumber());
-        p.setBirthDate(dto.birthDate());
+        Passenger p = buildPassenger(dto, clientSaved);
 
         Passenger passengerSaved = passengerRepository.save(p);
 
@@ -72,18 +54,7 @@ public class AuthService {
         String token = jwtUtil.generateToken(userDetails);
 
         // 5. Retornar el AuthResponse
-        return new AuthResponse(
-                token,
-                clientSaved.getId().toString(),
-                clientSaved.getFirstName(),
-                clientSaved.getLastName(),
-                clientSaved.getEmail(),
-                clientSaved.getPhone(),
-                clientSaved.getRole(),
-                clientSaved.getAvatar(),
-                passengerSaved.getMilesBalance(),
-                passengerSaved.getFrequentFlyerNumber()
-        );
+        return buildAuthResponse(token, passengerSaved, clientSaved);
     }
 
     @Transactional(readOnly = true)
@@ -111,18 +82,7 @@ public class AuthService {
         String token = jwtUtil.generateToken(user);
 
         // 6. Construir y retornar el AuthResponse completo
-        return new AuthResponse(
-                token,
-                client.getId().toString(),
-                client.getFirstName(),
-                client.getLastName(),
-                client.getEmail(),
-                client.getPhone(),
-                client.getRole(),
-                client.getAvatar(),
-                passenger.getMilesBalance(),
-                passenger.getFrequentFlyerNumber()
-        );
+        return buildAuthResponse(token,passenger,client);
     }
 
     @Transactional(readOnly = true)
@@ -159,4 +119,48 @@ public class AuthService {
     }
 
 
+
+    private Client buildClient(RegisterRequest dto) {
+        Client c = new Client();
+
+        c.setFirstName(dto.firstName());
+        c.setLastName(dto.lastName());
+        c.setEmail(dto.email());
+        c.setPhone(dto.phone());
+        c.setPasswordHash(passwordEncoder.encode(dto.password()));
+        c.setRole(Role.CLIENT);
+        c.setActive(true);
+
+        return c;
+    }
+    private Passenger buildPassenger(RegisterRequest dto, Client clientSaved) {
+        Passenger p = new Passenger();
+        p.setFirstName(dto.firstName());
+        p.setLastName(dto.lastName());
+        p.setClient(clientSaved);
+        p.setMilesBalance(0);
+
+        // Generar frequentFlyerNumber único ("SK-" + UUID corto)
+        String shortUUID = UUID.randomUUID().toString().replace("-","").substring(0,7).toUpperCase();
+        p.setFrequentFlyerNumber(shortUUID);
+        p.setDocumentType(dto.documentType());
+        p.setDocumentNumber(dto.documentNumber());
+        p.setBirthDate(dto.birthDate());
+
+        return p;
+    }
+    private AuthResponse buildAuthResponse(String token, Passenger passenger, Client client) {
+        return new AuthResponse(
+                token,
+                client.getId().toString(),
+                client.getFirstName(),
+                client.getLastName(),
+                client.getEmail(),
+                client.getPhone(),
+                client.getRole(),
+                client.getAvatar(),
+                passenger.getMilesBalance(),
+                passenger.getFrequentFlyerNumber()
+        );
+    }
 }
