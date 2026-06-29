@@ -1,6 +1,7 @@
 package com.skybooking.backend.services;
 
 import com.skybooking.backend.dtos.auth.AuthResponse;
+import com.skybooking.backend.dtos.auth.ChangePasswordRequest;
 import com.skybooking.backend.dtos.auth.LoginRequest;
 import com.skybooking.backend.dtos.auth.RegisterRequest;
 import com.skybooking.backend.models.Client;
@@ -136,4 +137,26 @@ public class AuthService {
         return clientRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("El token no pertenece a un usuario válido."));
     }
+
+    @Transactional
+    public void changePassword(Long clientId, ChangePasswordRequest dto) {
+        // 1. Buscar al cliente por ID
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado."));
+
+        // 2. Validar que la contraseña actual ingresada coincida con el hash de la base de datos
+        if (!passwordEncoder.matches(dto.currentPassword(), client.getPasswordHash())) {
+            throw new BadCredentialsException("La contraseña actual es incorrecta.");
+        }
+
+        // 3. Validar que la nueva contraseña no sea exactamente igual a la anterior (Regla de negocio opcional recomendada)
+        if (passwordEncoder.matches(dto.newPassword(), client.getPasswordHash())) {
+            throw new IllegalArgumentException("La nueva contraseña no puede ser igual a la anterior.");
+        }
+
+        // 4. Encriptar la nueva contraseña y actualizar la entidad
+        client.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+    }
+
+
 }
