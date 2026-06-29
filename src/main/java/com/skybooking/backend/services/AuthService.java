@@ -12,8 +12,6 @@ import com.skybooking.backend.repositories.PassengerRepository;
 import com.skybooking.backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,12 +44,7 @@ public class AuthService {
         Passenger passengerSaved = passengerRepository.save(p);
 
         // 4. Generar el JWT
-        UserDetails userDetails = User.builder()
-                .username(clientSaved.getEmail())
-                .password(clientSaved.getPasswordHash())
-                .roles(clientSaved.getRole().name())
-                .build();
-        String token = jwtUtil.generateToken(userDetails);
+        String token = jwtUtil.generateToken(clientSaved.getId(), clientSaved.getRole(), clientSaved.getEmail());
 
         // 5. Retornar el AuthResponse
         return buildAuthResponse(token, passengerSaved, clientSaved);
@@ -73,15 +66,10 @@ public class AuthService {
         Passenger passenger = passengerRepository.findByClientId(client.getId())
                 .orElseThrow(() -> new IllegalStateException("Error de consistencia: No se encontró un perfil de pasajero para este cliente."));
 
-        // 5. Generar las UserDetails para el JWT
-        UserDetails user = User.builder()
-                .username(client.getEmail())
-                .password(client.getPasswordHash())
-                .roles(client.getRole().name())
-                .build();
-        String token = jwtUtil.generateToken(user);
+        // 5. Generar el JWT
+        String token = jwtUtil.generateToken(client.getId(), client.getRole(), client.getEmail());
 
-        // 6. Construir y retornar el AuthResponse completo
+        // 6. Retornar el AuthResponse
         return buildAuthResponse(token,passenger,client);
     }
 

@@ -1,5 +1,6 @@
 package com.skybooking.backend.security;
 
+import com.skybooking.backend.models.enums.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -13,22 +14,48 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
+    private static final String CLAIM_UID = "uid";
+    private static final String CLAIM_ROLE = "role";
 
     @Value("${JWT_SECRET}")
     private String secretKey;
 
-    public String generateToken(UserDetails userDetails) {
+    @Value("${JWT_EXPIRATION_MS:3600000}")
+    private long expirationMs;
+
+    public String generateToken(Long id, Role role, String email) {
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + expirationMs);
+
         return Jwts.builder()
-                .subject(userDetails.getUsername())
-                .claim("roles", userDetails.getAuthorities())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .subject(email)
+                .claim(CLAIM_UID, id)
+                .claim(CLAIM_ROLE, role.name())
+                .issuedAt(now)
+                .expiration(expiration)
                 .signWith(getKey())
                 .compact();
     }
 
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
+    }
+
+    public Long extractUserId(String token) {
+        return extractAllClaims(token).get(CLAIM_UID, Long.class);
+    }
+
+    public Role extractRole(String token) {
+        String roleStr = extractAllClaims(token).get(CLAIM_ROLE, String.class);
+        return Role.valueOf(roleStr);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
@@ -38,14 +65,6 @@ public class JwtUtil {
 
     private boolean isTokenExpired(String token) {
         return extractAllClaims(token).getExpiration().before(new Date());
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
     }
 
     private SecretKey getKey() {
