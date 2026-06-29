@@ -12,6 +12,9 @@ import com.skybooking.backend.repositories.PassengerRepository;
 import com.skybooking.backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,16 +77,21 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public Client getClientByToken(String token) {
-        // 1. Limpiar el prefijo 'Bearer ' si viene incluido en el string
-        if (token != null && token.startsWith("Bearer ")) token = token.substring(7);
+    public Client getAuthenticatedClient() {
+        // 1. Extraer el username (email) usando la clase de utilidad JwtUtil
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        // 2. Extraer el username (email) usando la clase de utilidad JwtUtil
-        String email = jwtUtil.extractUsername(token);
+        if(auth == null || !auth.isAuthenticated()) throw new IllegalArgumentException("No hay usuario autenticado.");
 
-        // 3. Buscar el cliente en la base de datos
+        Object principal = auth.getPrincipal();
+
+        if(!(principal instanceof UserDetails)) throw new IllegalStateException("No hay usuario autenticado.");
+
+        String email = auth.getName();
+
+        // 2. Buscar el cliente en la base de datos
         return clientRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("El token no pertenece a un usuario válido."));
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado."));
     }
 
     @Transactional
@@ -104,6 +112,7 @@ public class AuthService {
 
         // 4. Encriptar la nueva contraseña y actualizar la entidad
         client.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+        clientRepository.save(client);
     }
 
 
