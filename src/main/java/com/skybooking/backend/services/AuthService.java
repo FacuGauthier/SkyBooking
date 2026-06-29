@@ -123,4 +123,17 @@ public class AuthService {
                 passenger.getFrequentFlyerNumber()
         );
     }
+
+    @Transactional(readOnly = true)
+    public Client getClientByToken(String token) {
+        // 1. Limpiar el prefijo 'Bearer ' si viene incluido en el string
+        if (token != null && token.startsWith("Bearer ")) token = token.substring(7);
+
+        // 2. Extraer el username (email) usando la clase de utilidad JwtUtil
+        String email = jwtUtil.extractUsername(token);
+
+        // 3. Buscar el cliente en la base de datos
+        return clientRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("El token no pertenece a un usuario válido."));
+    }
 }
