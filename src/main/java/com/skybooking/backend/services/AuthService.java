@@ -1,6 +1,7 @@
 package com.skybooking.backend.services;
 
 import com.skybooking.backend.dtos.auth.AuthResponse;
+import com.skybooking.backend.dtos.auth.LoginRequest;
 import com.skybooking.backend.dtos.auth.RegisterRequest;
 import com.skybooking.backend.models.Client;
 import com.skybooking.backend.models.Passenger;
@@ -9,6 +10,7 @@ import com.skybooking.backend.repositories.ClientRepository;
 import com.skybooking.backend.repositories.PassengerRepository;
 import com.skybooking.backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -83,5 +85,42 @@ public class AuthService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public AuthResponse login(LoginRequest dto) {
+        // 1. Buscar al cliente por email
+        Client client = clientRepository.findByEmail(dto.email())
+                .orElseThrow(() -> new BadCredentialsException("Credenciales incorrectas o el usuario no existe."));
 
+        // 2. Verificar si el usuario está activo
+        if(!client.isActive()) throw new IllegalArgumentException("La cuenta se encuentra desactivada.");
+
+        // 3. Validar la contraseña usando el PasswordEncoder
+        if(!passwordEncoder.matches(dto.password(), client.getPasswordHash())) throw new BadCredentialsException("Credenciales incorrectas o el usuario no existe.");
+
+        // 4. Recuperar el Passenger principal vinculado a este Client
+        Passenger passenger = passengerRepository.findByClientId(client.getId())
+                .orElseThrow(() -> new IllegalStateException("Error de consistencia: No se encontró un perfil de pasajero para este cliente."));
+
+        // 5. Generar las UserDetails para el JWT
+        UserDetails user = User.builder()
+                .username(client.getEmail())
+                .password(client.getPasswordHash())
+                .roles(client.getRole().name())
+                .build();
+        String token = jwtUtil.generateToken(user);
+
+        // 6. Construir y retornar el AuthResponse completo
+        return new AuthResponse(
+                token,
+                client.getId().toString(),
+                client.getFirstName(),
+                client.getLastName(),
+                client.getEmail(),
+                client.getPhone(),
+                client.getRole(),
+                client.getAvatar(),
+                passenger.getMilesBalance(),
+                passenger.getFrequentFlyerNumber()
+        );
+    }
 }
