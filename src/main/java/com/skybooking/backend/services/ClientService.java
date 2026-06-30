@@ -1,6 +1,5 @@
 package com.skybooking.backend.services;
 
-import com.skybooking.backend.dtos.auth.RegisterRequest;
 import com.skybooking.backend.dtos.booking.BookingSummaryResponse;
 import com.skybooking.backend.dtos.client.ClientProfileResponse;
 import com.skybooking.backend.dtos.client.ClientSummaryResponse;
@@ -24,89 +23,78 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final PassengerRepository passengerRepository;
     private final BookingService bookingService;
+    private final AuthService authService;
 
     @Transactional(readOnly = true)
     public ClientProfileResponse getProfile(Long clientId) {
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + clientId));
+                .orElseThrow(() -> new IllegalStateException("Client with id " + clientId + " not found"));
 
-        Passenger passenger = passengerRepository.findByClientId(clientId)
-                .orElseThrow(() -> new RuntimeException("Passenger no encontrado con ID: " + clientId));
+        Passenger passenger = passengerRepository.findByClientId(client.getId())
+                .orElseThrow(() -> new IllegalStateException("Passenger with id " + clientId + " not found"));
 
         return buildClientProfile(client, passenger);
     }
 
     @Transactional
-    public ClientProfileResponse updateProfile(Long clientId, UpdateProfileRequest dto) {
-        Client c = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + clientId));
+    public ClientProfileResponse updateProfile(UpdateProfileRequest dto) {
+        Client client = authService.getAuthenticatedClient();
 
-        c.setFirstName(dto.firstName());
-        c.setLastName(dto.lastName());
-        c.setPhone(dto.phone());
-        c.setAvatar(dto.avatar());
+        client.setFirstName(dto.firstName());
+        client.setLastName(dto.lastName());
+        client.setPhone(dto.phone());
+        client.setAvatar(dto.avatar());
 
-        Client clientUpdated = clientRepository.save(c);
+        Passenger passenger = passengerRepository.findByClientId(client.getId())
+                .orElseThrow(() -> new IllegalStateException("Pasajero principal no encontrado para el cliente ID: " + client.getId()));
 
-        Passenger mainPassenger = passengerRepository.findByClientId(clientId)
-                .orElseThrow(() -> new RuntimeException("Pasajero principal no encontrado para el cliente ID: " + clientId));
+        passenger.setFirstName(dto.firstName());
+        passenger.setLastName(dto.lastName());
 
-        return buildClientProfile(clientUpdated, mainPassenger);
+        return buildClientProfile(client, passenger);
     }
 
     @Transactional(readOnly = true)
     public Page<ClientSummaryResponse> getAllClients(Pageable pageable) {
         return clientRepository.findAll(pageable)
-                .map(client -> new ClientSummaryResponse(
-                        client.getId(),
-                        client.getFirstName(),
-                        client.getLastName(),
-                        client.getEmail(),
-                        client.getPhone(),
-                        client.getRole(),
-                        client.isActive()
-                ));
+                .map(this::buildClientSummary);
     }
 
     @Transactional(readOnly = true)
     public Page<ClientSummaryResponse> searchClient(String query,  Pageable pageable) {
         return clientRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
                 query, query, query, pageable)
-                .map(c -> new ClientSummaryResponse(
-                        c.getId(),
-                        c.getFirstName(),
-                        c.getLastName(),
-                        c.getEmail(),
-                        c.getPhone(),
-                        c.getRole(),
-                        c.isActive()
-                ));
+                .map(this::buildClientSummary);
     }
 
     @Transactional(readOnly = true)
     public List<BookingSummaryResponse> getClientBooking(Long clientId) {
-        if(!clientRepository.existsById(clientId)) {
-            throw new RuntimeException("Cliente no encontrado con ID: " + clientId);
-        }
-        return bookingService.getBookingByClientId(clientId, null, Pageable.unpaged());
+        clientRepository.findById(clientId)
+                .orElseThrow(() -> new IllegalStateException("Cliente no encontrado con ID: " + clientId));
+
+        return bookingService.getBookingByClient(clientId, null, Pageable.unpaged());
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingSummaryResponse> getMyBookings() {
+        Client client = authService.getAuthenticatedClient();
+
+        return bookingService.getBookingByClient(client.getId(), null, Pageable.unpaged());
     }
 
     @Transactional
     public void deactivateClient(Long clientId) {
         Client c = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + clientId));
-
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con ID: " + clientId));
         c.setActive(false);
-        clientRepository.save(c);
     }
 
     @Transactional
     public void activateClient(Long clientId) {
         Client c = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + clientId));
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con ID: " + clientId));
 
         c.setActive(true);
-        clientRepository.save(c);
     }
 
 
@@ -122,6 +110,17 @@ public class ClientService {
                 c.getAvatar(),
                 p.getMilesBalance(),
                 p.getFrequentFlyerNumber(),
+                c.isActive()
+        );
+    }
+    private ClientSummaryResponse buildClientSummary(Client c) {
+        return new ClientSummaryResponse(
+                c.getId(),
+                c.getFirstName(),
+                c.getLastName(),
+                c.getEmail(),
+                c.getPhone(),
+                c.getRole(),
                 c.isActive()
         );
     }
