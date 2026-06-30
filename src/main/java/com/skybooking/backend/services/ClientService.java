@@ -28,10 +28,10 @@ public class ClientService {
     @Transactional(readOnly = true)
     public ClientProfileResponse getProfile(Long clientId) {
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new IllegalStateException("Client with id " + clientId + " not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Client with id " + clientId + " not found"));
 
         Passenger passenger = passengerRepository.findByClientId(client.getId())
-                .orElseThrow(() -> new IllegalStateException("Passenger with id " + clientId + " not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Passenger with id " + clientId + " not found"));
 
         return buildClientProfile(client, passenger);
     }
@@ -44,12 +44,14 @@ public class ClientService {
         client.setLastName(dto.lastName());
         client.setPhone(dto.phone());
         client.setAvatar(dto.avatar());
+        clientRepository.save(client);
 
         Passenger passenger = passengerRepository.findByClientId(client.getId())
-                .orElseThrow(() -> new IllegalStateException("Pasajero principal no encontrado para el cliente ID: " + client.getId()));
+                .orElseThrow(() -> new IllegalArgumentException("Pasajero principal no encontrado para el cliente ID: " + client.getId()));
 
         passenger.setFirstName(dto.firstName());
         passenger.setLastName(dto.lastName());
+        passengerRepository.save(passenger);
 
         return buildClientProfile(client, passenger);
     }
@@ -70,7 +72,7 @@ public class ClientService {
     @Transactional(readOnly = true)
     public List<BookingSummaryResponse> getClientBooking(Long clientId) {
         clientRepository.findById(clientId)
-                .orElseThrow(() -> new IllegalStateException("Cliente no encontrado con ID: " + clientId));
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con ID: " + clientId));
 
         return bookingService.getBookingByClient(clientId, null, Pageable.unpaged());
     }
