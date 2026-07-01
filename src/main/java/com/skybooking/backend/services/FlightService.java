@@ -7,6 +7,7 @@ import com.skybooking.backend.dtos.airport.AirportSummaryResponse;
 import com.skybooking.backend.dtos.flight.FlightDetailResponse;
 import com.skybooking.backend.dtos.flight.FlightSearchRequest;
 import com.skybooking.backend.dtos.flight.FlightSearchResponse;
+import com.skybooking.backend.dtos.flight.OccupiedSeatsResponse;
 import com.skybooking.backend.dtos.plane.PlaneResponse;
 import com.skybooking.backend.models.Airline;
 import com.skybooking.backend.models.Airport;
@@ -70,6 +71,19 @@ public class FlightService {
 
         return buildFlightDetail(flight);
     }
+
+    public OccupiedSeatsResponse getOccupiedSeats(Long flightId) {
+        Flight flight = flightRepository.findById(flightId)
+                .orElseThrow(() -> new IllegalArgumentException("Vuelo no encontrado con ID: " + flightId));
+
+        List<String> occupiedSeats = passageRepository.findOccupiedSeatsByFlightId(flightId);
+
+        return new OccupiedSeatsResponse(
+                flightId, occupiedSeats
+        );
+    }
+
+
 
 
 
