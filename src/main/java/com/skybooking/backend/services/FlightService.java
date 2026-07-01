@@ -83,7 +83,12 @@ public class FlightService {
         );
     }
 
+    public Integer getAvailableSeatsCount(Long flightId, TravelClass travelClass) {
+        Flight flight = flightRepository.findById(flightId)
+                .orElseThrow(() -> new IllegalArgumentException("Vuelo no encontrado con ID: " + flightId));
 
+        return getAvailableSeatsCounts(flight, travelClass);
+    }
 
 
 
@@ -227,7 +232,7 @@ public class FlightService {
                 ? flight.getPlane().getBusinessSeats()
                 : flight.getPlane().getEconomySeats();
 
-        int occupiedSeats = passageRepository.countByFlightIdAndTravelClassAndBookingStatusNot(
+        int occupiedSeats = passageRepository.countByFlight_IdAndTravelClassAndBooking_StatusNot(
                 flight.getId(), travelClass, BookingStatus.CANCELLED);
 
         return totalSeats - occupiedSeats;
