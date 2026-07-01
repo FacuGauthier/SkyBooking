@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PassageRepository extends JpaRepository<Passage, Long> {
+    int countByFlightIdAndTravelClassAndBookingStatusNot(Long flightId, TravelClass travelClass, BookingStatus bookingStatus);
 }
