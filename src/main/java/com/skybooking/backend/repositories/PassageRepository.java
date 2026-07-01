@@ -16,5 +16,5 @@ public interface PassageRepository extends JpaRepository<Passage, Long> {
             "WHERE p.flight.id = :flightId " +
             "AND p.booking.status <> com.skybooking.backend.models.enums.BookingStatus.CANCELLED")
     List<String> findOccupiedSeatsByFlightId(@Param("flightId") Long flightId);
-    int countByFlightIdAndTravelClassAndBookingStatusNot(Long flightId, TravelClass travelClass, BookingStatus bookingStatus);
+    int countByFlight_IdAndTravelClassAndBooking_StatusNot(Long flightId, TravelClass travelClass, BookingStatus bookingStatus);
 }
