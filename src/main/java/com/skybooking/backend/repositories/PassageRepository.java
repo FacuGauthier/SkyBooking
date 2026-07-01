@@ -12,5 +12,9 @@ import java.util.List;
 
 @Repository
 public interface PassageRepository extends JpaRepository<Passage, Long> {
+    @Query("SELECT p.seatNumber FROM Passage p " +
+            "WHERE p.flight.id = :flightId " +
+            "AND p.booking.status <> com.skybooking.backend.models.enums.BookingStatus.CANCELLED")
+    List<String> findOccupiedSeatsByFlightId(@Param("flightId") Long flightId);
     int countByFlightIdAndTravelClassAndBookingStatusNot(Long flightId, TravelClass travelClass, BookingStatus bookingStatus);
 }
