@@ -103,7 +103,7 @@ public class FlightService {
 
         return new FlightDetailResponse(
                 flight.getId(),
-                flight.getFlightNumber(),
+                normalize(flight.getFlightNumber()),
                 origin,
                 destination,
                 flight.getDepartureTime(),
@@ -122,12 +122,12 @@ public class FlightService {
     private AirportResponse buildAirportResponse(Airport airport) {
         return new AirportResponse(
                 airport.getId(),
-                airport.getName(),
-                airport.getIataCode(),
-                airport.getIcaoCode(),
-                airport.getCity(),
-                airport.getCountry(),
-                airport.getTimezone(),
+                normalize(airport.getName()),
+                normalize(airport.getIataCode()),
+                normalize(airport.getIcaoCode()),
+                normalize(airport.getCity()),
+                normalize(airport.getCountry()),
+                normalize(airport.getTimezone()),
                 airport.getLatitude(),
                 airport.getLongitude()
         );
@@ -135,25 +135,25 @@ public class FlightService {
     private AirlineResponse buildAirlineResponse(Airline airline) {
         return new AirlineResponse(
                 airline.getId(),
-                airline.getName(),
-                airline.getIataCode(),
-                airline.getIcaoCode(),
-                airline.getCountry(),
-                airline.getWebsite(),
-                airline.getLogoUrl()
+                normalize(airline.getName()),
+                normalize(airline.getIataCode()),
+                normalize(airline.getIcaoCode()),
+                normalize(airline.getCountry()),
+                normalize(airline.getWebsite()),
+                normalize(airline.getLogoUrl())
         );
     }
     private PlaneResponse buildPlaneResponse(Plane plane) {
         return new PlaneResponse(
                 plane.getId(),
-                plane.getRegistration(),
-                plane.getModel(),
+                normalize(plane.getRegistration()),
+                normalize(plane.getModel()),
                 plane.getBusinessSeats(),
                 plane.getEconomySeats(),
                 plane.getTotalCapacity(),
                 plane.getManufactureYear(),
                 plane.getAirline().getId(),
-                plane.getAirline().getName()
+                normalize(plane.getAirline().getName())
         );
     }
 
