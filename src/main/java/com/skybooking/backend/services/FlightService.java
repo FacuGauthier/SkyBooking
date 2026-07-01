@@ -4,21 +4,22 @@ import com.skybooking.backend.dtos.airline.AirlineResponse;
 import com.skybooking.backend.dtos.airline.AirlineSummaryResponse;
 import com.skybooking.backend.dtos.airport.AirportResponse;
 import com.skybooking.backend.dtos.airport.AirportSummaryResponse;
-import com.skybooking.backend.dtos.flight.FlightDetailResponse;
-import com.skybooking.backend.dtos.flight.FlightSearchRequest;
-import com.skybooking.backend.dtos.flight.FlightSearchResponse;
-import com.skybooking.backend.dtos.flight.OccupiedSeatsResponse;
+import com.skybooking.backend.dtos.flight.*;
 import com.skybooking.backend.dtos.plane.PlaneResponse;
 import com.skybooking.backend.models.Airline;
 import com.skybooking.backend.models.Airport;
 import com.skybooking.backend.models.Flight;
 import com.skybooking.backend.models.Plane;
 import com.skybooking.backend.models.enums.BookingStatus;
+import com.skybooking.backend.models.enums.FlightStatus;
 import com.skybooking.backend.models.enums.TravelClass;
+import com.skybooking.backend.repositories.AirportRepository;
 import com.skybooking.backend.repositories.FlightRepository;
 import com.skybooking.backend.repositories.PassageRepository;
+import com.skybooking.backend.repositories.PlaneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,7 +34,11 @@ import java.util.Map;
 public class FlightService {
     private final FlightRepository flightRepository;
     private final PassageRepository passageRepository;
+    private final AirportRepository airportRepository;
+    private final PlaneRepository planeRepository;
 
+    private static final List<BookingStatus> ACTIVE_BOOKING_STATUSES =
+            List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED);
     private final Map<TravelClass, BigDecimal> CLASS_MULTIPLIERS = Map.of(
             TravelClass.ECONOMY, BigDecimal.valueOf(1.0),
             TravelClass.PREMIUM_ECONOMY, BigDecimal.valueOf(1.4),
@@ -88,6 +93,83 @@ public class FlightService {
                 .orElseThrow(() -> new IllegalArgumentException("Vuelo no encontrado con ID: " + flightId));
 
         return getAvailableSeatsCounts(flight, travelClass);
+    }
+
+    @Transactional
+    public FlightDetailResponse createFlight(FlightRequest dto) {
+        Plane plane = planeRepository.findById(dto.planeId())
+                .orElseThrow(() -> new IllegalArgumentException("Plane no encontrado con ID: " + dto.planeId() ));
+        Airport origin = airportRepository.findById(dto.originAirportId())
+                .orElseThrow(() -> new IllegalArgumentException("Aeropuerto no encontrado con ID: " + dto.originAirportId()));
+        Airport destination = airportRepository.findById(dto.originAirportId())
+                .orElseThrow(() -> new IllegalArgumentException("Aeropuerto no encontrado con ID: " + dto.destinationAirportId()));
+
+        if(origin.getId().equals(destination.getId())) throw new IllegalArgumentException("El aeropuerto de origen y destino no pueden ser el mismo.");
+
+        if(!dto.departureTime().isBefore(dto.arrivalTime())) throw new IllegalArgumentException("La fecha de salida debe ser anterior a la fecha de llegada.");
+
+        if(flightRepository.existsOverlappingFlight(dto.planeId(),dto.departureTime(),dto.arrivalTime())) throw new IllegalArgumentException("El avión ya tiene un vuelo asignado que se superpone con el horario indicado.");
+
+        Flight flight = new Flight();
+        flight.setFlightNumber(dto.flightNumber());
+        flight.setOriginAirport(origin);
+        flight.setDestinationAirport(destination);
+        flight.setDepartureTime(dto.departureTime());
+        flight.setArrivalTime(dto.arrivalTime());
+        flight.setStatus(FlightStatus.SCHEDULED);
+        flight.setBasePrice(BigDecimal.valueOf(dto.basePrice()));
+        flight.setPlane(plane);
+        flight.setStops(dto.stops());
+        Flight saved = flightRepository.save(flight);
+
+        return buildFlightDetail(saved);
+    }
+
+    @Transactional
+    public FlightDetailResponse updateFlight(Long flightId, FlightRequest dto) {
+        Flight flight = flightRepository.findById(flightId)
+                .orElseThrow(() -> new IllegalArgumentException("Vuelo no encontrado con ID: " + flightId));
+
+        if(passageRepository.existsByFlight_IdAndBooking_Status(flightId, BookingStatus.CONFIRMED)){
+            throw new IllegalStateException("No se puede modificar un vuelo que ya tiene reservas confirmadas.");
+        }
+
+        Plane plane = planeRepository.findById(dto.planeId())
+                .orElseThrow(() -> new IllegalArgumentException("Plane no encontrado con ID: " + dto.planeId() ));
+        Airport origin = airportRepository.findById(dto.originAirportId())
+                .orElseThrow(() -> new IllegalArgumentException("Aeropuerto no encontrado con ID: " + dto.originAirportId()));
+        Airport destination = airportRepository.findById(dto.originAirportId())
+                .orElseThrow(() -> new IllegalArgumentException("Aeropuerto no encontrado con ID: " + dto.destinationAirportId()));
+
+        if(origin.getId().equals(destination.getId())) throw new IllegalArgumentException("El aeropuerto de origen y destino no pueden ser el mismo.");
+
+        if(!dto.departureTime().isBefore(dto.arrivalTime())) throw new IllegalArgumentException("La fecha de salida debe ser anterior a la fecha de llegada.");
+
+        if(flightRepository.existsOverlappingFlightExcluding(plane.getId(),dto.departureTime(),dto.arrivalTime(), flightId)) throw new IllegalArgumentException("El avión ya tiene otro vuelo asignado que se superpone con el horario indicado.");
+
+        flight.setFlightNumber(dto.flightNumber());
+        flight.setOriginAirport(origin);
+        flight.setDestinationAirport(destination);
+        flight.setDepartureTime(dto.departureTime());
+        flight.setArrivalTime(dto.arrivalTime());
+        flight.setBasePrice(BigDecimal.valueOf(dto.basePrice()));
+        flight.setPlane(plane);
+        flight.setStops(dto.stops() != null ? dto.stops() : 0);
+        Flight updated = flightRepository.save(flight);
+
+        return buildFlightDetail(updated);
+    }
+
+    @Transactional
+    public void deleteFlight(Long flightId) {
+        Flight flight = flightRepository.findById(flightId)
+                .orElseThrow(() -> new IllegalArgumentException("Vuelo no encontrado con ID: " + flightId));
+
+        if(passageRepository.existsByFlight_IdAndBooking_StatusIn(flightId, ACTIVE_BOOKING_STATUSES)){
+            throw new IllegalStateException("No se puede eliminar un vuelo con reservas activas (pendientes o confirmadas).");
+        }
+
+        flightRepository.delete(flight);
     }
 
 
@@ -171,8 +253,8 @@ public class FlightService {
                 plane.getEconomySeats(),
                 plane.getTotalCapacity(),
                 plane.getManufactureYear(),
-                plane.getAirline().getId(),
-                normalize(plane.getAirline().getName())
+                plane.getAirline() != null ? plane.getAirline().getId() : null,
+                plane.getAirline() != null ? plane.getAirline().getName() : null
         );
     }
 
