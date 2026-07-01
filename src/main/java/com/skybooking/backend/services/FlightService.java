@@ -4,6 +4,8 @@ import com.skybooking.backend.dtos.airline.AirlineSummaryResponse;
 import com.skybooking.backend.dtos.airport.AirportSummaryResponse;
 import com.skybooking.backend.dtos.flight.FlightSearchRequest;
 import com.skybooking.backend.dtos.flight.FlightSearchResponse;
+import com.skybooking.backend.models.Airline;
+import com.skybooking.backend.models.Airport;
 import com.skybooking.backend.models.Flight;
 import com.skybooking.backend.models.enums.BookingStatus;
 import com.skybooking.backend.models.enums.TravelClass;
@@ -80,26 +82,9 @@ public class FlightService {
 
         int availableSeats = getAvailableSeatsCounts(flight, TravelClass.ECONOMY) + getAvailableSeatsCounts(flight, TravelClass.BUSINESS);
 
-        AirportSummaryResponse origin = new  AirportSummaryResponse(
-                flight.getOriginAirport().getId(),
-                flight.getOriginAirport().getIataCode(),
-                flight.getOriginAirport().getCity(),
-                flight.getOriginAirport().getCountry()
-        );
-
-        AirportSummaryResponse destination = new  AirportSummaryResponse(
-                flight.getDestinationAirport().getId(),
-                flight.getDestinationAirport().getIataCode(),
-                flight.getDestinationAirport().getCity(),
-                flight.getDestinationAirport().getCountry()
-        );
-
-        AirlineSummaryResponse airline = new AirlineSummaryResponse(
-                flight.getAirline().getId(),
-                flight.getAirline().getName(),
-                flight.getAirline().getIataCode(),
-                flight.getAirline().getLogoUrl()
-        );
+        AirportSummaryResponse origin = buildAirportSummary(flight.getOriginAirport());
+        AirportSummaryResponse destination = buildAirportSummary(flight.getOriginAirport());
+        AirlineSummaryResponse airline = buildAirlineSummary(flight.getAirline());
 
         return new FlightSearchResponse(
                 flight.getId(),
@@ -116,6 +101,22 @@ public class FlightService {
                 flight.getPlane().getModel(),
                 airline,
                 flight.getStops()
+        );
+    }
+    private AirportSummaryResponse buildAirportSummary(Airport airport) {
+        return new AirportSummaryResponse(
+                airport.getId(),
+                airport.getIataCode(),
+                airport.getCity(),
+                airport.getCountry()
+        );
+    }
+    private AirlineSummaryResponse buildAirlineSummary(Airline airline) {
+        return new AirlineSummaryResponse(
+                airline.getId(),
+                airline.getName(),
+                airline.getIataCode(),
+                airline.getLogoUrl()
         );
     }
     private int getAvailableSeatsCounts(Flight flight, TravelClass travelClass) {
