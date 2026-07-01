@@ -30,4 +30,15 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
             @Param("maxPrice") Double maxPrice,
             @Param("travelClass") String travelClass
     );
+    @Query("SELECT COUNT(f) > 0 FROM Flight f WHERE f.plane.id = :planeId " +
+            "AND f.departureTime < :arrivalTime AND f.arrivalTime > :departureTime")
+    boolean existsOverlappingFlight(@Param("planeId") Long planeId,
+                                    @Param("departureTime") LocalDateTime departureTime,
+                                    @Param("arrivalTime") LocalDateTime arrivalTime);
+    @Query("SELECT COUNT(f) > 0 FROM Flight f WHERE f.plane.id = :planeId AND f.id <> :flightId " +
+            "AND f.departureTime < :arrivalTime AND f.arrivalTime > :departureTime")
+    boolean existsOverlappingFlightExcluding(@Param("planeId") Long planeId,
+                                             @Param("departureTime") LocalDateTime departureTime,
+                                             @Param("arrivalTime") LocalDateTime arrivalTime,
+                                             @Param("flightId") Long flightId);
 }
